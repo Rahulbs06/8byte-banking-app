@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: 8byte-app-service
+  name: eightbyte-app-service
   labels:
     app: 8byte-app
 spec:
