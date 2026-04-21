@@ -7,20 +7,19 @@ pipeline {
     }
 
     environment {
-        SCANNER_HOME     = tool 'sonar-scanner'
-        AWS_REGION       = 'ap-south-1'
-        ECR_REGISTRY     = '188019708471.dkr.ecr.ap-south-1.amazonaws.com'
-        ECR_REPO         = '8byte-prod-app'
-        IMAGE_TAG        = "${BUILD_NUMBER}"
-        EKS_CLUSTER      = '8byte-prod-eks-cluster'
-        SONAR_URL        = 'http://10.0.1.211:9000'
+        SCANNER_HOME   = tool 'sonar-scanner'
+        AWS_REGION     = 'ap-south-1'
+        ECR_REGISTRY   = '188019708471.dkr.ecr.ap-south-1.amazonaws.com'
+        ECR_REPO       = '8byte-prod-app'
+        IMAGE_TAG      = "${BUILD_NUMBER}"
+        EKS_CLUSTER    = '8byte-prod-eks-cluster'
     }
 
     stages {
 
         stage('checkout') {
             steps {
-                git branch: 'main',
+                git branch: env.BRANCH_NAME ?: 'main',
                     credentialsId: 'git-cred',
                     url: 'https://github.com/Rahulbs06/8byte-banking-app.git'
             }
@@ -67,24 +66,36 @@ pipeline {
         }
 
         stage('build') {
+           when {
+    expression { env.BRANCH_NAME == 'main' }
+}
             steps {
                 sh 'mvn package -DskipTests'
             }
         }
 
         stage('docker build') {
+            when {
+    expression { env.BRANCH_NAME == 'main' }
+}
             steps {
                 sh "docker build -t ${ECR_REGISTRY}/${ECR_REPO}:${IMAGE_TAG} ."
             }
         }
 
         stage('trivy image scan') {
+            when {
+    expression { env.BRANCH_NAME == 'main' }
+}
             steps {
                 sh "trivy image --format table -o trivy-image-report.html ${ECR_REGISTRY}/${ECR_REPO}:${IMAGE_TAG}"
             }
         }
 
         stage('push to ecr') {
+           when {
+    expression { env.BRANCH_NAME == 'main' }
+}
             steps {
                 sh """
                     aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REGISTRY}
@@ -96,6 +107,9 @@ pipeline {
         }
 
         stage('deploy to staging') {
+            when {
+    expression { env.BRANCH_NAME == 'main' }
+}
             steps {
                 sh """
                     aws eks update-kubeconfig --region ${AWS_REGION} --name ${EKS_CLUSTER}
@@ -108,12 +122,18 @@ pipeline {
         }
 
         stage('approval') {
+            when {
+    expression { env.BRANCH_NAME == 'main' }
+}
             steps {
                 input message: 'Deploy to production?', ok: 'Yes'
             }
         }
 
         stage('deploy to production') {
+            when {
+    expression { env.BRANCH_NAME == 'main' }
+}
             steps {
                 sh """
                     kubectl apply -f k8s/ -n production
@@ -125,21 +145,15 @@ pipeline {
     }
 
     post {
-    failure {
-        mail to: 'rahulbs946@gmail.com',
-             subject: "Pipeline failed: ${JOB_NAME} #${BUILD_NUMBER}",
-             body: """
-                Build failed: ${JOB_NAME} #${BUILD_NUMBER}
-                Check console: ${BUILD_URL}
-             """
+        failure {
+            mail to: 'rahulbs946@gmail.com',
+                 subject: "Pipeline failed: ${JOB_NAME} #${BUILD_NUMBER}",
+                 body: "Build failed: ${JOB_NAME} #${BUILD_NUMBER}\nCheck: ${BUILD_URL}"
+        }
+        success {
+            mail to: 'rahulbs946@gmail.com',
+                 subject: "Pipeline success: ${JOB_NAME} #${BUILD_NUMBER}",
+                 body: "Build succeeded: ${JOB_NAME} #${BUILD_NUMBER}\nCheck: ${BUILD_URL}"
+        }
     }
-    success {
-        mail to: 'rahulbs946@gmail.com',
-             subject: "Pipeline success: ${JOB_NAME} #${BUILD_NUMBER}",
-             body: """
-                Build succeeded: ${JOB_NAME} #${BUILD_NUMBER}
-                Check console: ${BUILD_URL}
-             """
-    }
-  }
 }
