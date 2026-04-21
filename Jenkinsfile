@@ -125,10 +125,21 @@ pipeline {
     }
 
     post {
-        failure {
-            mail to: 'rahul@8byte.ai',
-                 subject: "Pipeline failed: ${JOB_NAME} #${BUILD_NUMBER}",
-                 body: "Check Jenkins: ${BUILD_URL}"
-        }
+    failure {
+        mail to: 'rahulbs946@gmail.com',
+             subject: "Pipeline failed: ${JOB_NAME} #${BUILD_NUMBER}",
+             body: """
+                Build failed: ${JOB_NAME} #${BUILD_NUMBER}
+                Check console: ${BUILD_URL}
+             """
     }
+    success {
+        mail to: 'rahulbs946@gmail.com',
+             subject: "Pipeline success: ${JOB_NAME} #${BUILD_NUMBER}",
+             body: """
+                Build succeeded: ${JOB_NAME} #${BUILD_NUMBER}
+                Check console: ${BUILD_URL}
+             """
+    }
+  }
 }
