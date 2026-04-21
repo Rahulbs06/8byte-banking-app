@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: 8byte-app
+  labels:
+    app: 8byte-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: 8byte-app
+  template:
+    metadata:
+      labels:
+        app: 8byte-app
+    spec:
+      containers:
+      - name: 8byte-app
+        image: 188019708471.dkr.ecr.ap-south-1.amazonaws.com/8byte-prod-app:latest
+        ports:
+        - containerPort: 8080
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
