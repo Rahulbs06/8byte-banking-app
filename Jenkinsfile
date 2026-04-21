@@ -13,7 +13,7 @@ pipeline {
         ECR_REPO         = '8byte-prod-app'
         IMAGE_TAG        = "${BUILD_NUMBER}"
         EKS_CLUSTER      = '8byte-prod-eks-cluster'
-        SONAR_URL        = 'http://65.2.172.36:9000'
+        SONAR_URL        = 'http://10.0.1.211:9000'
     }
 
     stages {
