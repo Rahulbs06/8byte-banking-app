@@ -23,4 +23,4 @@ Jenkins CI/CD pipeline handles:
 - `src/` - Java source code
 - `k8s/` - Kubernetes manifests
 - `Dockerfile` - Container image definition
-- `Jenkinsfile` - CI/CD pipeline definition
+- `Jenkinsfile` - CI/CD pipeline definition 
